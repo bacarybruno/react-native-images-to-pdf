@@ -24,12 +24,14 @@ struct Page: Decodable {
 class CreatePdfOptions: Decodable {
   let outputPath: String
   let pages: [Page]
-  
+  let quality: Double
+
   init(_ options: NSDictionary) throws {
     let jsonData = try JSONSerialization.data(withJSONObject: options, options: [])
     let pdfCreateOptions = try JSONDecoder().decode(CreatePdfOptions.self, from: jsonData)
     
     self.outputPath = pdfCreateOptions.outputPath
     self.pages = pdfCreateOptions.pages
+    self.quality = min(max(pdfCreateOptions.quality ?? 1.0, 0.0), 1.0)
   }
 }

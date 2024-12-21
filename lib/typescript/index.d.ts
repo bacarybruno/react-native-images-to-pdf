@@ -10,6 +10,7 @@ export type Page = {
 export type CreatePdfOptions = {
     outputPath: string;
     pages: Page[];
+    quality?: number;
 };
 export declare function createPdf(options: CreatePdfOptions): Promise<string>;
 export declare function getDocumentsDirectory(): Promise<string>;

@@ -6,10 +6,12 @@ import com.facebook.react.bridge.ReadableMap;
 public class CreatePdfOptions {
   public String outputPath;
   public Page[] pages;
+  public int quality;
 
   public CreatePdfOptions(ReadableMap options) {
     outputPath = getStringOrThrow(options, "outputPath");
     pages = parsePages(getArrayOrThrow(options, "pages"));
+    quality = options.hasKey("quality") ? (int)Math.round(100 * options.getDouble("quality")) : 0;
   }
 
   private String getStringOrThrow(ReadableMap options, String key) {

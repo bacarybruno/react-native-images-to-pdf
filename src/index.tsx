@@ -35,6 +35,7 @@ interface InternalPage extends Omit<Page, 'backgroundColor'> {
 export type CreatePdfOptions = {
   outputPath: string;
   pages: Page[];
+  quality?: number;
 };
 
 export function createPdf(options: CreatePdfOptions): Promise<string> {

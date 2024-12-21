@@ -8,18 +8,19 @@ class ImagesPdf: NSObject {
   let E_NO_IMAGES_PROVIDED = "NO_IMAGES_PROVIDED"
   
   @objc
-  func createPdf(_ options: NSDictionary, resolver resolve:RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
+  func createPdf(_ options: NSDictionary, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
     do {
       let createPdfOptions = try CreatePdfOptions(options)
       
       let outputPath = createPdfOptions.outputPath
       let pages = createPdfOptions.pages
+      let quality = createPdfOptions.quality
       
       if pages.isEmpty {
         throw CreatePdfError.noImagesProvided
       }
       
-      let data = try renderPdfData(pages)
+      let data = try renderPdfData(pages, quality: quality)
       
       let writtenOutputPath = try writePdfFile(data: data,
                                        outputPath: outputPath)
@@ -52,7 +53,7 @@ class ImagesPdf: NSObject {
     }
   }
   
-  func renderPdfData(_ pages: [Page]) throws -> Data {
+  func renderPdfData(_ pages: [Page], quality: Double) throws -> Data {
     let renderer = UIGraphicsPDFRenderer()
     var pageError: Error? = nil
     
@@ -76,9 +77,8 @@ class ImagesPdf: NSObject {
           let pageBounds = CGRect(x: 0, y: 0, width: width, height: height)
           context.beginPage(withBounds: pageBounds, pageInfo: [:])
           
-          
-          if let backgroudColorInt = page.backgroundColor {
-            let backgroundColor = createUIColor(from: backgroudColorInt).cgColor
+          if let backgroundColorInt = page.backgroundColor {
+            let backgroundColor = createUIColor(from: backgroundColorInt).cgColor
             context.cgContext.setFillColor(backgroundColor)
             context.cgContext.fill(pageBounds)
           }
@@ -92,8 +92,10 @@ class ImagesPdf: NSObject {
           } else {
             scaledImage = image
           }
+
+          let compressedImage = compressImage(scaledImage ?? image, quality: quality)
           
-          scaledImage?.draw(at: .zero)
+          compressedImage.draw(at: .zero)
         }
       }
     }
@@ -103,6 +105,13 @@ class ImagesPdf: NSObject {
     }
     
     return data
+  }
+  
+  func compressImage(_ image: UIImage, quality: Double) -> UIImage {
+    guard let data = image.jpegData(compressionQuality: quality) else {
+      return image
+    }
+    return UIImage(data: data) ?? image
   }
   
   func writePdfFile(data: Data, outputPath: String) throws -> String {

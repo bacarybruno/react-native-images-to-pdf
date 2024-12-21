@@ -19,6 +19,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.google.common.io.BaseEncoding;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -48,6 +49,7 @@ public class ImagesPdfModule extends ReactContextBaseJavaModule {
 
       String outputPath = options.outputPath;
       CreatePdfOptions.Page[] pages = options.pages;
+      int quality = options.quality;
 
       if (pages.length == 0) {
         throw new Exception("No images provided.");
@@ -87,11 +89,13 @@ public class ImagesPdfModule extends ReactContextBaseJavaModule {
             scaledImage = ImageScaling.scale(image, size, imageFit);
           }
 
+          Bitmap compressedImage = compress(scaledImage, quality);
+
           Canvas canvas = page.getCanvas();
           if (config.backgroundColor != null) {
             canvas.drawColor(config.backgroundColor);
           }
-          canvas.drawBitmap(scaledImage, 0, 0, null);
+          canvas.drawBitmap(compressedImage, 0, 0, null);
 
           pdfDocument.finishPage(page);
         }
@@ -200,5 +204,15 @@ public class ImagesPdfModule extends ReactContextBaseJavaModule {
     }
 
     return bitmap;
+  }
+
+  private Bitmap compress(Bitmap bmp, int quality) throws IOException {
+    if (quality <= 0 || quality >= 100) return bmp;
+
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    bmp.compress(Bitmap.CompressFormat.JPEG, quality, stream);
+    byte[] byteArray = stream.toByteArray();
+    stream.close();
+    return BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
   }
 }
